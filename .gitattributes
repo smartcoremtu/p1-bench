@@ -1,0 +1,5 @@
+*.sh text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+# vectors are exact bytes (CRLF inside): never convert
+tests/vectors/*.txt binary
