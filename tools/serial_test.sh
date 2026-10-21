@@ -2,7 +2,8 @@
 # Serial bench test on the receiver Pi: plays the golden vectors into the UART and checks that the
 # receiver logged every valid one intact and rejected every corrupt one.
 #
-#   bash tools/serial_test.sh self      # Pi talks to itself: jumper header pin 8 (TX) to pin 10 (RX)
+#   bash tools/serial_test.sh internal  # Pi talks to itself inside the UART chip: no wiring at all
+#   bash tools/serial_test.sh self      # Pi talks to itself through the pins: jumper header pin 8 (TX) to pin 10 (RX)
 #   bash tools/serial_test.sh listen    # only receive, for a sender on another machine (laptop + USB
 #                                       # adapter, or the student's emulator); stop with Ctrl+C
 # Options via environment: LOOPS (default 2), DEV (default from /opt/p1bench/receiver.env).
@@ -32,13 +33,14 @@ echo "== receiver on $DEV, logs in $OUT"
 RX=$!
 sleep 1
 
-if [[ $MODE == self ]]; then
-  "$PY" tools/inject_vectors.py --serial "$DEV" --loop "$LOOPS" --log "$OUT/sent.csv" >/dev/null
+if [[ $MODE == self || $MODE == internal ]]; then
+  LB=""; [[ $MODE == internal ]] && LB="--loopback"
+  "$PY" tools/inject_vectors.py --serial "$DEV" $LB --loop "$LOOPS" --log "$OUT/sent.csv" >/dev/null
   sleep 1
   kill -TERM $RX; wait $RX || true
   echo
   if ! ls "$OUT"/recv_*.csv >/dev/null 2>&1; then
-    echo "FAIL: nothing received. Is the jumper on header pins 8 and 10?"; exit 1
+    echo "FAIL: nothing received.$([[ $MODE == self ]] && echo " Is the jumper on header pins 8 and 10?")"; exit 1
   fi
   "$PY" tools/compare_logs.py "$OUT/sent.csv" "$OUT"/recv_*.csv
 else

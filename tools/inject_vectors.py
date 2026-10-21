@@ -6,6 +6,8 @@ Serial (into John's Pi through a 3.3 V USB-serial adapter, TX -> GPIO15/RX, GND 
 TCP (behaves like a network P1 dongle; Home Assistant DSMR 'network' mode connects to it):
     python tools/inject_vectors.py --tcp 2001
 
+Internal loopback (Linux, e.g. on the receiver Pi itself, no wiring): --serial /dev/ttyAMA0 --loopback
+
 Options: --set valid|corrupt|all|<vector id>  (default all), --loop N (0 = forever, default 1),
          --interval seconds (default 1.0), --log sent.csv (default logs/sent_<UTC time>.csv)
 
@@ -47,18 +49,31 @@ def load_vectors(which):
 
 
 class SerialOut:
-    def __init__(self, port):
+    def __init__(self, port, loopback=False):
         try:
             import serial
         except ImportError:
             sys.exit("pyserial is not installed: pip install pyserial==3.5")
         self.s = serial.Serial(port, 115200, bytesize=8, parity="N", stopbits=1, timeout=1)
+        self.loopback = loopback
+        if loopback:
+            self._set_loop(True)
+
+    def _set_loop(self, on):
+        # Linux only: TIOCM_LOOP switches the UART's internal loopback (PL011: CR.LBE), so its TX
+        # feeds its own RX inside the chip. Tests the UART and driver without any wiring.
+        import fcntl
+        import struct
+        import termios
+        fcntl.ioctl(self.s.fileno(), termios.TIOCMBIS if on else termios.TIOCMBIC, struct.pack("I", 0x8000))
 
     def send(self, data):
         self.s.write(data)
         self.s.flush()  # wait until the bytes have left, so telegrams never overlap
 
     def close(self):
+        if self.loopback:
+            self._set_loop(False)
         self.s.close()
 
 
@@ -111,10 +126,12 @@ def main():
     ap.add_argument("--loop", type=int, default=1)
     ap.add_argument("--interval", type=float, default=1.0)
     ap.add_argument("--log")
+    ap.add_argument("--loopback", action="store_true",
+                    help="Linux serial only: switch on the UART's internal loopback (no wiring needed)")
     a = ap.parse_args()
 
     vectors = load_vectors(a.set)
-    sink = SerialOut(a.serial) if a.serial else TcpOut(a.tcp)
+    sink = SerialOut(a.serial, a.loopback) if a.serial else TcpOut(a.tcp)
     log_path = Path(a.log) if a.log else ROOT / "logs" / f"sent_{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}.csv"
     log_path.parent.mkdir(parents=True, exist_ok=True)
 

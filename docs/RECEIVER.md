@@ -13,12 +13,20 @@ Log columns: `docs/LOG_FORMAT.md`.
 | | |
 |---|---|
 | Hardware | Raspberry Pi 5, Raspberry Pi OS Lite 64-bit (Debian 13 trixie) |
-| Name / login | `p1-receiver.local`, user `p1`, SSH keys only (no password login). Ask Nash to add your public key |
+| Name / login | `p1-receiver.local`, user `p1`, SSH keys only (no password login). Send Nash your public key (below) |
 | Serial input | `/dev/ttyAMA0` = GPIO15 (RX) on header **pin 10**. GPIO14 (TX) = pin 8. GND = pin 6 |
 | Settings | `/opt/p1bench/receiver.env` (device, baud, log folder) |
 | Code | `/opt/p1bench/repo` (git checkout of `p1-bench`), Python venv `/opt/p1bench/.venv` |
 | Logs | `/opt/p1bench/logs/recv_<UTC>.csv` + `.raw`, a new pair every day at 00:00 UTC |
 | Service | `p1-receiver` (systemd): runs the receiver on the UART, restarts it if it crashes |
+
+**Getting access.** On your own laptop (Windows PowerShell, macOS or Linux), once:
+```
+ssh-keygen -t ed25519 -C "john-p1bench"        # Enter for the default file; a passphrase is recommended
+```
+Send Nash the **`.pub`** file it creates (`~/.ssh/id_ed25519.pub`; on Windows `C:\Users\<you>\.ssh\id_ed25519.pub`).
+Never send the file without `.pub`: that is your private key. Nash adds the line to `/home/p1/.ssh/authorized_keys`
+on the Pi; then `ssh p1@p1-receiver.local` works from a laptop on the same network.
 
 Rebuilding the Pi from scratch: `docs/PI_SETUP.md`, then `receiver/setup_receiver.sh` (README.md §2).
 
@@ -48,7 +56,8 @@ arrived with the right values and every corrupt one was rejected.
 | # | Test | Wiring | Command (on the Pi, in `/opt/p1bench/repo`) |
 |---|---|---|---|
 | 0 | Software self-check | none | `/opt/p1bench/.venv/bin/python tests/test_receiver.py` → `104/104 passed` |
-| 1 | UART self-loopback: proves the Pi's UART and the receiver | one jumper wire, **pin 8 ↔ pin 10** | `bash tools/serial_test.sh self` |
+| 1a | UART internal loopback: proves the UART chip, driver and receiver | none | `bash tools/serial_test.sh internal` |
+| 1b | UART pin loopback: adds the header pins | one female-female jumper, **pin 8 ↔ pin 10** | `bash tools/serial_test.sh self` |
 | 2 | T3b: laptop → 3.3 V USB-serial adapter → Pi | adapter TX → pin 10, adapter GND → pin 6. Nothing else | Pi: `bash tools/serial_test.sh listen`; laptop: `python tools/inject_vectors.py --serial COM5 --loop 2` (README.md §3), then copy the laptop's `logs/sent_*.csv` to the Pi and run the printed `compare_logs.py` line |
 | 3 | Real P1 levels: same as 2, but through the NPN inverter front end | see the build notes doc | as test 2 |
 | 4 | The student's emulator | emulator RJ12 → front end → pin 10 | `serial_test.sh listen`; the emulator must write a `sent_*.csv` in the same format |
