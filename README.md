@@ -1,8 +1,8 @@
 # SmartCORE P1 bench
 
 Test bench for the P1 port emulator project (MTU, SmartCORE WP2). Baseline format: DSMR 5.0.2.
-Background and requirements: `P1_Emulator_Workflow_Audit_and_Requirements_2026-10-18.docx`;
-the receiver Pi build notes: `P1_Receiver_Pi_Build_Notes_2026-10-19.docx` (both one folder up).
+Background and requirements: `../02 Emulator audit/P1_Emulator_Workflow_Audit_and_Requirements_2026-10-18.docx`;
+receiver background notes: `../03 Receiver/P1_Receiver_Pi_Build_Notes_2026-10-19.docx`.
 
 ```
 lib/p1telegram.py          reference telegram builder + CRC16 (the contract, work item N2)
@@ -11,7 +11,8 @@ tests/vectors/             16 valid + 6 corrupt telegrams, index.json = expected
 tests/test_vectors.py      checks the vectors with the reference CRC and dsmr_parser
 tools/inject_vectors.py    plays vectors into a receiver over serial or TCP, writes a sent log
 receiver/setup_receiver.sh prepares John's Raspberry Pi (UART, venv, service unit)
-receiver/receiver.py       John writes this (reads UART, frames, checks CRC, logs per docs/LOG_FORMAT.md)
+receiver/receiver.py       reference receiver (reads UART or TCP, frames, checks CRC, logs per docs/LOG_FORMAT.md) - in development
+docs/PI_SETUP.md           blank SD card -> Pi reachable over SSH
 docs/LOG_FORMAT.md         CSV columns shared by every sender and receiver
 ```
 
@@ -23,7 +24,9 @@ python tests/test_vectors.py        # expect 22/22 passed
 ```
 Windows has no system time-zone database: also `pip install tzdata`, or `ZoneInfo("Europe/Dublin")` fails on import.
 
-## 2. Prepare John's Pi (Raspberry Pi OS Lite 64-bit, Pi 4 or 5)
+## 2. Prepare the receiver Pi (Raspberry Pi OS Lite 64-bit, Pi 4 or 5)
+
+Flash and first boot: `docs/PI_SETUP.md`. Then:
 
 ```
 ssh-copy-id <user>@<pi>              # first, so the script can turn off password login
