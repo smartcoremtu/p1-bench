@@ -11,7 +11,11 @@ tests/vectors/             16 valid + 6 corrupt telegrams, index.json = expected
 tests/test_vectors.py      checks the vectors with the reference CRC and dsmr_parser
 tools/inject_vectors.py    plays vectors into a receiver over serial or TCP, writes a sent log
 receiver/setup_receiver.sh prepares John's Raspberry Pi (UART, venv, service unit)
-receiver/receiver.py       reference receiver (reads UART or TCP, frames, checks CRC, logs per docs/LOG_FORMAT.md) - in development
+receiver/receiver.py       reference receiver (UART, TCP or file in; frames, checks CRC, logs per docs/LOG_FORMAT.md)
+tools/compare_logs.py      sent log vs received log -> PASS/FAIL
+tools/serial_test.sh       serial bench tests on the Pi (self-loopback, or listen for another sender)
+tests/test_receiver.py     receiver self-check (104 checks, incl. a TCP run with the injector)
+docs/RECEIVER.md           operating guide for the receiver Pi (start here, John)
 docs/PI_SETUP.md           blank SD card -> Pi reachable over SSH
 docs/LOG_FORMAT.md         CSV columns shared by every sender and receiver
 ```
@@ -36,6 +40,12 @@ sudo bash ~/p1-bench/receiver/setup_receiver.sh p1-receiver
 sudo reboot
 sudo mv ~/p1-bench /opt/p1bench/repo # the service expects the repo here
 ```
+Or deploy with git from the development laptop (how the bench Pi is kept up to date):
+```
+ssh <user>@<pi> 'git init -b receiver /opt/p1bench/repo && git -C /opt/p1bench/repo config receive.denyCurrentBranch updateInstead'
+git remote add pi <user>@<pi>:/opt/p1bench/repo
+git push pi receiver                 # every later update: the same push
+```
 
 ## 3. Loopback test (T3b): laptop → USB-serial adapter → Pi UART
 
@@ -45,7 +55,9 @@ adapter TX → Pi GPIO15 (header pin 10), adapter GND → Pi GND (pin 6). Leave 
 ```
 python tools/inject_vectors.py --serial COM5 --loop 10       # on the laptop
 ```
-On the Pi, John's receiver must log 160 good telegrams and flag every corrupt one.
+On the Pi run `bash tools/serial_test.sh listen` first; then compare the two logs with `tools/compare_logs.py`
+(PASS = all 32 valid telegrams intact, all 12 corrupt ones rejected for `--loop 2`). Without an adapter,
+`bash tools/serial_test.sh self` with a jumper from header pin 8 to pin 10 tests the Pi's own UART.
 Quick look without a receiver: `cat /dev/ttyAMA0` after `stty -F /dev/ttyAMA0 115200 raw`.
 
 ## 4. TCP mode (behaves like a network dongle)
