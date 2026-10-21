@@ -42,11 +42,9 @@ sudo bash ~/p1-bench/receiver/setup_receiver.sh p1-receiver
 sudo reboot
 sudo mv ~/p1-bench /opt/p1bench/repo # the service expects the repo here
 ```
-Or deploy with git from the development laptop (how the bench Pi is kept up to date):
+Or clone from GitHub (how the bench Pi is set up; update later with `git pull`):
 ```
-ssh <user>@<pi> 'git init -b receiver /opt/p1bench/repo && git -C /opt/p1bench/repo config receive.denyCurrentBranch updateInstead'
-git remote add pi <user>@<pi>:/opt/p1bench/repo
-git push pi receiver                 # every later update: the same push
+sudo git clone https://github.com/smartcoremtu/p1-bench.git /opt/p1bench/repo && sudo chown -R <user>: /opt/p1bench/repo
 ```
 
 ## 3. Loopback test (T3b): laptop → USB-serial adapter → Pi UART

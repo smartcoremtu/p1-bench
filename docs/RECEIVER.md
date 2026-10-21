@@ -86,8 +86,12 @@ One row per telegram **or broken fragment**. `error` empty and `crc_ok` = 1 mean
 
 ## 5. Changing the code
 
-The code lives in git (`p1-bench`). Nash's laptop is the master copy for now and deploys with
-`git push pi receiver`; once the repo is on GitHub, clone it and send changes as pull requests.
+The code lives on GitHub: `https://github.com/smartcoremtu/p1-bench` (ask Nash for write access).
+Clone it on your laptop, make changes on a branch, run the tests, open a pull request into `main`.
+After a change is merged, update the Pi:
+```
+cd /opt/p1bench/repo && git pull && sudo systemctl restart p1-receiver
+```
 
 ```
 receiver/receiver.py     Framer (bytes -> telegrams), check_frame (CRC, parse), RecvLog (CSV/raw), inputs

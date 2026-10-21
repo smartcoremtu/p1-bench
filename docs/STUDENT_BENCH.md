@@ -18,7 +18,7 @@ it makes its own WiFi:
 
 | WiFi name | `p1-receiver` |
 |---|---|
-| Password | on the handover sheet |
+| Password | password |
 | Pi address | `10.42.0.1` (also `p1-receiver.local`) |
 
 Connect your laptop to that WiFi (your laptop has no internet while connected), then:
