@@ -55,6 +55,7 @@ systemctl disable --now serial-getty@ttyAMA0.service serial-getty@serial0.servic
 usermod -aG dialout "$USER_NAME"
 
 # ---- 3. packages ----------------------------------------------------------------------
+export DEBIAN_FRONTEND=noninteractive   # no debconf prompts over a plain ssh session
 apt-get update -qq
 apt-get install -y -qq git python3-venv python3-pip chrony
 timedatectl set-ntp true || true
@@ -65,14 +66,14 @@ mkdir -p "$BENCH/logs"
 "$BENCH/.venv/bin/pip" install -q --upgrade pip
 "$BENCH/.venv/bin/pip" install -q "pyserial==$PYSERIAL" "dsmr_parser==$DSMR_PARSER"
 cat >"$BENCH/receiver.env" <<EOF
-# Settings for John's receiver (read by p1-receiver.service)
+# Settings for the reference receiver (read by p1-receiver.service)
 P1_SERIAL_DEVICE=$UART_DEV
 P1_BAUD=115200
 P1_LOG_DIR=$BENCH/logs
 EOF
 chown -R "$USER_NAME:$USER_NAME" "$BENCH"
 
-# ---- 5. service for the receiver (John's code goes in $BENCH/repo/receiver/receiver.py) --
+# ---- 5. service for the receiver ($BENCH/repo/receiver/receiver.py) ---------------------
 cat >/etc/systemd/system/p1-receiver.service <<EOF
 [Unit]
 Description=SmartCORE P1 reference receiver
@@ -82,7 +83,7 @@ After=network-online.target time-sync.target
 User=$USER_NAME
 EnvironmentFile=$BENCH/receiver.env
 WorkingDirectory=$BENCH/repo
-ExecStart=$BENCH/.venv/bin/python receiver/receiver.py
+ExecStart=$BENCH/.venv/bin/python receiver/receiver.py --quiet
 Restart=on-failure
 RestartSec=5
 
