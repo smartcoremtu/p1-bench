@@ -23,7 +23,7 @@ if [[ ! -s $ENV ]]; then
 fi
 source "$ENV"
 
-nmcli -t -f NAME con show | grep -qx p1-hotspot && nmcli con delete p1-hotspot >/dev/null
+nmcli con delete p1-hotspot >/dev/null 2>&1 || true
 nmcli con add type wifi ifname wlan0 con-name p1-hotspot autoconnect no ssid "$HOTSPOT_SSID" \
   802-11-wireless.mode ap 802-11-wireless.band bg ipv4.method shared ipv6.method disabled \
   wifi-sec.key-mgmt wpa-psk wifi-sec.proto rsn wifi-sec.pairwise ccmp wifi-sec.group ccmp \
