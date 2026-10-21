@@ -15,7 +15,9 @@ receiver/receiver.py       reference receiver (UART, TCP or file in; frames, che
 tools/compare_logs.py      sent log vs received log -> PASS/FAIL
 tools/serial_test.sh       serial bench tests on the Pi (self-loopback, or listen for another sender)
 tests/test_receiver.py     receiver self-check (104 checks, incl. a TCP run with the injector)
-docs/RECEIVER.md           operating guide for the receiver Pi (start here, John)
+docs/RECEIVER.md           operating guide for the receiver Pi (John)
+docs/STUDENT_BENCH.md      checking your emulator with the receiver Pi (student)
+receiver/setup_hotspot.sh  WPA2 fallback hotspot 'p1-receiver' when no known WiFi is around
 docs/PI_SETUP.md           blank SD card -> Pi reachable over SSH
 docs/LOG_FORMAT.md         CSV columns shared by every sender and receiver
 ```

@@ -9,7 +9,7 @@ TCP (behaves like a network P1 dongle; Home Assistant DSMR 'network' mode connec
 Internal loopback (Linux, e.g. on the receiver Pi itself, no wiring): --serial /dev/ttyAMA0 --loopback
 
 Options: --set valid|corrupt|all|<vector id>  (default all), --loop N (0 = forever, default 1),
-         --interval seconds (default 1.0), --log sent.csv (default logs/sent_<UTC time>.csv)
+         --interval seconds (default 1.0; keep it above the receiver's 0.5 s silence timeout), --log sent.csv (default logs/sent_<UTC time>.csv)
 
 The adapter sends normal (non-inverted) UART levels, so it goes straight to GPIO15, NOT
 through the P1 front-end inverter. Use 3.3 V logic adapters only: Pi GPIOs are not 5 V tolerant.
